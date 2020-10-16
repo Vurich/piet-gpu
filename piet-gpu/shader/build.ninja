@@ -7,7 +7,6 @@ glslang_validator = glslangValidator
 rule glsl
   command = $glslang_validator -V -o $out $in
 
-
 build elements.spv: glsl elements.comp | scene.h state.h annotated.h
 
 build binning.spv: glsl binning.comp | annotated.h state.h bins.h setup.h
@@ -21,3 +20,6 @@ build backdrop.spv: glsl backdrop.comp | annotated.h tile.h setup.h
 build coarse.spv: glsl coarse.comp | annotated.h bins.h ptcl.h setup.h
 
 build kernel4.spv: glsl kernel4.comp | ptcl.h setup.h
+
+build render.frag.spv: glsl render.frag
+build render.vert.spv: glsl render.vert

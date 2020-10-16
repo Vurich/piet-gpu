@@ -6,6 +6,7 @@
 
 #version 450
 #extension GL_GOOGLE_include_directive : enable
+#pragma optimize(on)
 
 #define N_ROWS 4
 #define WG_SIZE 32
@@ -25,14 +26,14 @@ layout(set = 0, binding = 1) volatile buffer StateBuf {
     uint[] state;
 };
 
-// The annotated results are stored here.
-layout(set = 0, binding = 2) buffer AnnotatedBuf {
-    uint[] annotated;
+// Path segments are stored here.
+layout(set = 0, binding = 2) buffer PathSegBuf {
+    uint[] pathseg;
 };
 
-// Path segments are stored here.
-layout(set = 0, binding = 3) buffer PathSegBuf {
-    uint[] pathseg;
+// The annotated results are stored here.
+layout(set = 1, binding = 0) buffer AnnotatedBuf {
+    uint[] annotated;
 };
 
 #include "scene.h"

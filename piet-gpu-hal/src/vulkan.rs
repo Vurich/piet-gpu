@@ -327,8 +327,26 @@ impl VkInstance {
             .find(|mode| mode == &vk::PresentModeKHR::MAILBOX)
             .unwrap_or(vk::PresentModeKHR::FIFO);
 
-        let image_count = 2; // TODO
-        let extent = capabilities.current_extent; // TODO: wayland for example will complain here ..
+        let image_count = 2.max(capabilities.min_image_count).min(
+            capabilities
+                .max_image_count
+                .max(capabilities.min_image_count),
+        );
+
+        let extent = match capabilities.current_extent {
+            ash::vk::Extent2D {
+                width: u32::MAX,
+                height: u32::MAX,
+            } => {
+                // TODO: This is hard-coded because we don't store the requested
+                //       surface size anywhere.
+                ash::vk::Extent2D {
+                    width: 8 * 128,
+                    height: 8 * 96,
+                }
+            }
+            other => other,
+        };
 
         let create_info = vk::SwapchainCreateInfoKHR::builder()
             .surface(surface.surface)

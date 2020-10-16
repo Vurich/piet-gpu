@@ -10,30 +10,31 @@
 
 #version 450
 #extension GL_GOOGLE_include_directive : enable
+#pragma optimize(on)
 
 #include "setup.h"
 
 layout(local_size_x = N_TILE, local_size_y = 1) in;
 
-layout(set = 0, binding = 0) buffer AnnotatedBuf {
-    uint[] annotated;
-};
-
-layout(set = 0, binding = 1) buffer BinsBuf {
+layout(set = 0, binding = 0) buffer BinsBuf {
     uint[] bins;
 };
 
-layout(set = 0, binding = 2) buffer TileBuf {
+layout(set = 0, binding = 1) buffer TileBuf {
     uint[] tile;
 };
 
-layout(set = 0, binding = 3) buffer AllocBuf {
+layout(set = 0, binding = 2) buffer AllocBuf {
     uint n_elements;
     uint alloc;
 };
 
-layout(set = 0, binding = 4) buffer PtclBuf {
+layout(set = 0, binding = 3) buffer PtclBuf {
     uint[] ptcl;
+};
+
+layout(set = 1, binding = 0) buffer AnnotatedBuf {
+    uint[] annotated;
 };
 
 #include "annotated.h"
