@@ -8,7 +8,6 @@ use pico_svg::PicoSvg;
 use piet::kurbo::{BezPath, Circle, Line, Point, Vec2};
 use piet::{Color, RenderContext};
 use piet_gpu_types::encoder::Encode;
-use rand::{Rng, RngCore};
 use std::{iter, mem};
 use wgpu::util::DeviceExt as _;
 
@@ -22,8 +21,6 @@ const WIDTH_IN_TILES: usize = 128;
 const HEIGHT_IN_TILES: usize = 96;
 const PTCL_INITIAL_ALLOC: usize = 1024;
 
-const N_CIRCLES: usize = 0;
-
 pub fn render_svg(rc: &mut impl RenderContext, filename: &str, scale: f64) {
     let xml_str = std::fs::read_to_string(filename).unwrap();
     let start = std::time::Instant::now();
@@ -36,50 +33,7 @@ pub fn render_svg(rc: &mut impl RenderContext, filename: &str, scale: f64) {
 }
 
 pub fn render_scene(rc: &mut impl RenderContext) {
-    let mut rng = rand::thread_rng();
-    for _ in 0..N_CIRCLES {
-        let color = Color::from_rgba32_u32(rng.next_u32());
-        let center = Point::new(
-            rng.gen_range(0.0, WIDTH as f64),
-            rng.gen_range(0.0, HEIGHT as f64),
-        );
-        let radius = rng.gen_range(0.0, 50.0);
-        let circle = Circle::new(center, radius);
-        rc.fill(circle, &color);
-    }
-    /*
-    let mut path = BezPath::new();
-    path.move_to((100.0, 1150.0));
-    path.line_to((200.0, 1200.0));
-    path.line_to((150.0, 1250.0));
-    path.close_path();
-    rc.fill(path, &Color::rgb8(128, 0, 128));
-    */
-    rc.stroke(
-        Line::new((100.0, 100.0), (200.0, 150.0)),
-        &Color::WHITE,
-        5.0,
-    );
-    //render_cardioid(rc);
     render_tiger(rc);
-}
-
-#[allow(unused)]
-fn render_cardioid(rc: &mut impl RenderContext) {
-    let n = 601;
-    let dth = std::f64::consts::PI * 2.0 / (n as f64);
-    let center = Point::new(1024.0, 768.0);
-    let r = 750.0;
-    let mut path = BezPath::new();
-    for i in 1..n {
-        let p0 = center + Vec2::from_angle(i as f64 * dth) * r;
-        let p1 = center + Vec2::from_angle(((i * 2) % n) as f64 * dth) * r;
-        //rc.fill(&Circle::new(p0, 8.0), &Color::WHITE);
-        path.move_to(p0);
-        path.line_to(p1);
-        //rc.stroke(Line::new(p0, p1), &Color::BLACK, 2.0);
-    }
-    rc.stroke(&path, &Color::BLACK, 2.0);
 }
 
 fn render_tiger(rc: &mut impl RenderContext) {
@@ -95,24 +49,6 @@ fn render_tiger(rc: &mut impl RenderContext) {
     let start = std::time::Instant::now();
     svg.render(rc);
     println!("flattening and encoding time: {:?}", start.elapsed());
-}
-
-#[allow(unused)]
-fn dump_scene(buf: &[u8]) {
-    for i in 0..(buf.len() / 4) {
-        let mut buf_u32 = [0u8; 4];
-        buf_u32.copy_from_slice(&buf[i * 4..i * 4 + 4]);
-        println!("{:4x}: {:8x}", i * 4, u32::from_le_bytes(buf_u32));
-    }
-}
-
-#[allow(unused)]
-pub fn dump_k1_data(k1_buf: &[u32]) {
-    for i in 0..k1_buf.len() {
-        if k1_buf[i] != 0 {
-            println!("{:4x}: {:8x}", i * 4, k1_buf[i]);
-        }
-    }
 }
 
 pub struct Renderer {
@@ -467,13 +403,12 @@ impl ComputePipeline {
     }
 }
 
-const STATE_SIZE: u64 = 1 * 1024 * 1024;
-const ANNO_SIZE: u64 = 64 * 1024 * 1024;
-const PATHSEG_SIZE: u64 = 64 * 1024 * 1024;
-const TILE_SIZE: u64 = 64 * 1024 * 1024;
-const BIN_SIZE: u64 = 64 * 1024 * 1024;
-const PTCL_SIZE: u64 = 48 * 1024 * 1024;
-const IMAGE_SIZE: u64 = 4 * WIDTH as u64 * HEIGHT as u64;
+const STATE_SIZE: u64 = (1 * 1024 * 1024) / (1 << 8);
+const ANNO_SIZE: u64 = (64 * 1024 * 1024) / (1 << 14);
+const PATHSEG_SIZE: u64 = (64 * 1024 * 1024) / (1 << 9);
+const TILE_SIZE: u64 = (64 * 1024 * 1024) / (1 << 5);
+const BIN_SIZE: u64 = (64 * 1024 * 1024) / (1 << 12);
+const PTCL_SIZE: u64 = (48 * 1024 * 1024) / (1 << 2);
 const TILE_ALLOC_SIZE: u64 = 12;
 const COARSE_ALLOC_SIZE: u64 = 8;
 const BIN_ALLOC_SIZE: u64 = 8;

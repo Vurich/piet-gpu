@@ -8,13 +8,7 @@ use winit::{
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
-        .with_inner_size(winit::dpi::LogicalSize {
-            width: WIDTH as u32 / 2,
-            height: HEIGHT as u32 / 2,
-        })
-        .with_resizable(false) // currently not supported
-        .build(&event_loop)?;
+    let window = WindowBuilder::new().build(&event_loop)?;
 
     Ok(futures::executor::block_on(run(window, event_loop)))
 }
@@ -74,13 +68,60 @@ async fn run(window: Window, event_loop: EventLoop<()>) {
 
     let renderer = Renderer::new(&device, scene, n_paths, n_pathseg);
 
+    {
+        let out_buf = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (4 * WIDTH * HEIGHT) as _,
+            usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::MAP_READ,
+            mapped_at_creation: false,
+        });
+
+        let mut cmd_buf =
+            device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+        renderer.record(&mut cmd_buf, None);
+
+        queue.submit(iter::once(cmd_buf.finish()));
+
+        let slice = out_buf.slice(..);
+        let fut = slice.map_async(wgpu::MapMode::Read);
+
+        device.poll(wgpu::Maintain::Wait);
+
+        fut.await.unwrap();
+
+        image::save_buffer(
+            "./out.png",
+            &*slice.get_mapped_range(),
+            WIDTH as u32,
+            HEIGHT as u32,
+            image::ColorType::Rgba8,
+        )
+        .unwrap();
+
+        dbg!();
+
+        out_buf.unmap();
+    }
+
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll; // `ControlFlow::Wait` if only re-render on event
+        *control_flow = ControlFlow::Wait; // `ControlFlow::Wait` if only re-render on event
 
         match event {
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
                 WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
+                }
+                WindowEvent::Resized(size) => {
+                    let sc_desc = wgpu::SwapChainDescriptor {
+                        usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                        width: size.width,
+                        height: size.height,
+                        present_mode: wgpu::PresentMode::Mailbox,
+                    };
+
+                    swapchain = device.create_swap_chain(&surface, &sc_desc);
                 }
                 _ => (),
             },
