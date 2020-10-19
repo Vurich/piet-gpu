@@ -60,17 +60,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ash-window"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "905c4ca25f752e7ab3c3e8f2882625f876e4c3ea5feffbc83f81d697e043afd6"
-dependencies = [
- "ash",
- "raw-window-handle",
- "raw-window-metal",
-]
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1255,16 +1244,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "piet-gpu-hal"
-version = "0.1.0"
-dependencies = [
- "ash",
- "ash-window",
- "once_cell",
- "raw-window-handle",
-]
-
-[[package]]
 name = "piet-gpu-types"
 version = "0.0.0"
 dependencies = [
@@ -1439,18 +1418,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "raw-window-metal"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b0f43bdc87adef4ce827b07775c9e59716b52f369696e7fb4ec7c4acb4e20b1"
-dependencies = [
- "cocoa",
- "core-graphics",
- "objc",
- "raw-window-handle",
 ]
 
 [[package]]
